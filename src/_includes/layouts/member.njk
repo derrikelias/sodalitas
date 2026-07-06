@@ -19,10 +19,7 @@ layout: layouts/base.njk
   data-iterations="{{ pbkdf2Iterations }}"
 >
   <p class="eyebrow" style="text-align:center;">Private Archive</p>
-  <p class="unlock-copy">
-    This page holds {{ name }}'s private archive. Enter the key held separately
-    from the card to view it.
-  </p>
+  <p class="unlock-copy">This page belongs to No. {{ number }}.</p>
   <form id="unlock-form" class="unlock-form">
     <input
       type="password"
@@ -35,7 +32,7 @@ layout: layouts/base.njk
     >
     <button type="submit">Unlock</button>
   </form>
-  <p id="unlock-error" class="unlock-error" hidden>That key did not work. Please try again.</p>
+  <p id="unlock-error" class="unlock-error" hidden>That did not work. Please try again.</p>
 </div>
 
 <div id="member-content">
