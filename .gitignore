@@ -1,3 +1,7 @@
 node_modules/
 _site/
 .DS_Store
+
+# Real member content and access codes — never committed, ever.
+# See private/README.md.
+private/

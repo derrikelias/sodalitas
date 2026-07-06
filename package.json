@@ -5,9 +5,11 @@
   "scripts": {
     "build": "eleventy",
     "serve": "eleventy --serve",
-    "debug": "DEBUG=Eleventy* eleventy"
+    "debug": "DEBUG=Eleventy* eleventy",
+    "encrypt": "node scripts/encrypt-members.js"
   },
   "devDependencies": {
-    "@11ty/eleventy": "^3.0.0"
+    "@11ty/eleventy": "^3.0.0",
+    "gray-matter": "^4.0.3"
   }
 }

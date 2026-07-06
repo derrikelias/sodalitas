@@ -11,58 +11,63 @@ layout: layouts/base.njk
   </div>
 </div>
 
-<section>
-  <p class="eyebrow">Timeline</p>
-  <h2 class="section-title">A record, in order</h2>
-  <ul class="timeline">
-    {% for entry in timeline %}
-      <li>
-        <span class="date">{{ entry.date }}</span>
-        <h3 class="entry-title">{{ entry.title }}</h3>
-        <p>{{ entry.body }}</p>
-      </li>
-    {% endfor %}
-  </ul>
-</section>
-
-<section>
-  <p class="eyebrow">Shared Memories</p>
-  <h2 class="section-title">{{ memoriesTitle }}</h2>
-  {{ content | safe }}
-</section>
-
-{% if countries and countries.length %}
-<section>
-  <p class="eyebrow">Countries Visited Together</p>
-  <h2 class="section-title">{{ countries.length }}, so far</h2>
-  <ul class="countries">
-    {% for country in countries %}
-      <li>{{ country }}</li>
-    {% endfor %}
-  </ul>
-</section>
-{% endif %}
-
-{% if gallery and gallery.length %}
-<section>
-  <p class="eyebrow">Gallery</p>
-  <h2 class="section-title">Fragments</h2>
-  <div class="gallery-grid">
-    {% for image in gallery %}
-      <img src="{{ image.src | url }}" alt="{{ image.alt }}">
-    {% endfor %}
-  </div>
-</section>
-{% endif %}
-
-{% if personalMessage %}
-<section>
-  <p class="eyebrow" style="text-align:center;">Personal Message</p>
-  <p class="message">
-    {{ personalMessage }}
-    {% if personalMessageAttribution %}
-      <span class="message-attribution">{{ personalMessageAttribution }}</span>
-    {% endif %}
+<div
+  class="unlock"
+  id="unlock"
+  data-salt="{{ salt }}"
+  data-iv="{{ iv }}"
+  data-ciphertext="{{ ciphertext }}"
+  data-iterations="{{ pbkdf2Iterations }}"
+>
+  <p class="eyebrow" style="text-align:center;">Private Archive</p>
+  <p class="unlock-copy">
+    This page holds {{ name }}'s private archive. Enter the key held separately
+    from the card to view it.
   </p>
-</section>
-{% endif %}
+  <form id="unlock-form" class="unlock-form">
+    <input
+      type="password"
+      id="unlock-code"
+      autocomplete="off"
+      autocapitalize="off"
+      spellcheck="false"
+      placeholder="Enter key"
+      aria-label="Access key"
+    >
+    <button type="submit">Unlock</button>
+  </form>
+  <p id="unlock-error" class="unlock-error" hidden>That key did not work. Please try again.</p>
+</div>
+
+<div id="member-content" hidden>
+  <section id="timeline-section" hidden>
+    <p class="eyebrow">Timeline</p>
+    <h2 class="section-title">A record, in order</h2>
+    <ul class="timeline" id="timeline-list"></ul>
+  </section>
+
+  <section id="memories-section" hidden>
+    <p class="eyebrow">Shared Memories</p>
+    <h2 class="section-title" id="memories-title"></h2>
+    <p id="memories-body" style="line-height: var(--leading-relaxed); color: var(--colour-ink-soft); max-width: var(--content-width-narrow);"></p>
+  </section>
+
+  <section id="countries-section" hidden>
+    <p class="eyebrow">Countries Visited Together</p>
+    <h2 class="section-title" id="countries-count"></h2>
+    <ul class="countries" id="countries-list"></ul>
+  </section>
+
+  <section id="gallery-section" hidden>
+    <p class="eyebrow">Gallery</p>
+    <h2 class="section-title">Fragments</h2>
+    <div class="gallery-grid" id="gallery-grid"></div>
+  </section>
+
+  <section id="message-section" hidden>
+    <p class="eyebrow" style="text-align:center;">Personal Message</p>
+    <p class="message" id="message-text"></p>
+  </section>
+</div>
+
+<script src="{{ '/assets/js/decrypt.js' | url }}"></script>

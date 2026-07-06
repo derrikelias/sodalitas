@@ -1,32 +1,15 @@
 ---
 layout: layouts/member.njk
-number: "003"
+number: '003'
 name: Isabelle Marchetti
-memberSince: "2009"
+memberSince: '2009'
 role: Keeper of the Coastal Routes
-memoriesTitle: Lorem ipsum dolor sit amet
-timeline:
-  - date: March 2009
-    title: Lorem ipsum dolor sit amet
-    body: Consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua, remembered still for the way the evening ended.
-  - date: July 2014
-    title: Ut enim ad minim veniam
-    body: Quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat, a week neither of us has ever properly explained to anyone else.
-  - date: September 2021
-    title: Duis aute irure dolor
-    body: In reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur, somewhere between the third and fourth stop.
-countries:
-  - Portugal
-  - Japan
-  - Iceland
-  - Morocco
-  - Slovenia
-  - Vietnam
-  - Chile
-gallery: []
-personalMessage: "\u201CLorem ipsum dolor sit amet, consectetur adipiscing elit \u2014 some things are only true because we decided, years ago, that they would be.\u201D"
-personalMessageAttribution: "\u2014 written, privately, for you"
-permalink: "/members/003/index.html"
+permalink: /members/003/index.html
+encrypted: true
+salt: EHPr+r6jb3LPuHY4LEtexA==
+iv: 9EZ0oumUNBgVa3my
+ciphertext: >-
+  rMbYoyvSdzUSlFyBUeEumGBwGZpako59uoB4XjxtL7lA6bYECF+xl5poujpgpUyC83hx9VE2tD2tl8FRA/I2Nv3tdoO3Opwp3iWLs8IX70KkX9g+rP+nreh7n1gexvU6xKXpjbOWSZlT4484SlJ+NqO5ovq1iqtdOlgsACQZkPX9RPOYP63MZvLxP+lodSXqpXitGfMIDXYJjhZgQ/0Q+dlPbD7fpnB2RVUGibl7M7fHl4H78WJH0flGZ0cIVMuZ1Djsxj6mNOiLayHyoxlbkGZoGXXdSKkg5/DesLhCh5B9/tC+W9QpqPLiM6psEakUQIaRJ+ri2jnoQ1tn6GdvbUwHNKdVa/kR+WUBk0aukNRFTr3o165MGJYmojayEYQpTMryZZv2JZz9yyHSmWZQAmhgBMMp0LirpC1UXRTve7PFoCR0XP4ZKVBedi5YdkhdaJMwHXsStZUGJZjVlgPad04r/CELrbmgkdB1/OhcYy/SVPVkSCCfID5gQpH9WpyBfLrdCmyPTjLGMkyKCTuXqgty1Sa0XgP3/Ab5F00XaNii+x+NuWzxciqqAN6Mi52zykexcgZ4Jcsj77Yl+eBpCRePC3OZ4foCs5iUJ4Aw9hkeUUs2ksgEyjVvXWmjHvR28pTE2suZOJYjLLHVcga4dR4K5FZv2yBHk2ATmpmV2wAu8c1fpweiVu5oNo1wvz6fBQEgcPJEJgGXNJCUzbkvfBohfjqpFkPQLryNrfoqqiM=
+pbkdf2Iterations: 250000
 ---
 
-Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo. Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit.

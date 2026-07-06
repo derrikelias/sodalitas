@@ -4,6 +4,53 @@
    site-wide. See README for the reasoning behind this structure.
    ========================================================================== */
 
+/* ---------------------------------------------------------------------
+   Self-hosted fonts — no external request, no dependency on a CDN
+   still existing years from now. Both are variable fonts: one file
+   per family per style covers the full weight range.
+   --------------------------------------------------------------------- */
+@font-face {
+  font-family: "Fraunces";
+  src: url("/assets/fonts/Fraunces-Variable.woff2") format("woff2");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Fraunces";
+  src: url("/assets/fonts/Fraunces-Italic-Variable.woff2") format("woff2");
+  font-weight: 100 900;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Work Sans";
+  src: url("/assets/fonts/WorkSans-Variable.woff2") format("woff2");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Work Sans";
+  src: url("/assets/fonts/WorkSans-Italic-Variable.woff2") format("woff2");
+  font-weight: 100 900;
+  font-style: italic;
+  font-display: swap;
+}
+
+/* Fraunces ships a "WONK" axis — intentionally irregular, quirky
+   letterforms as an alternate style. This file defaults it on, which
+   works against the quiet, restrained mood used everywhere else, so
+   it's turned off explicitly here rather than left to the font's own
+   default. SOFT stays at 0 for the same reason — the crisper, more
+   classical cut suits the "archive" tone better than the softer one. */
+h1, h2, h3, .mark, .message, .entry-title {
+  font-variation-settings: "SOFT" 0, "WONK" 0;
+}
+
 :root {
   --colour-ink: #1a1815;
   --colour-ink-soft: #4a453f;
@@ -380,6 +427,73 @@ h2.section-title {
   letter-spacing: var(--tracking-wide);
   color: var(--colour-ink-soft);
   margin-top: var(--space-3);
+}
+
+/* ---------------------------------------------------------------------
+   Unlock prompt — shown until the correct key decrypts the page
+   --------------------------------------------------------------------- */
+.unlock {
+  max-width: var(--content-width-narrow);
+  margin: 0 auto;
+  padding: var(--space-6) var(--space-4);
+  text-align: center;
+}
+
+.unlock-copy {
+  color: var(--colour-ink-soft);
+  line-height: var(--leading-relaxed);
+  margin: 0 0 var(--space-4);
+}
+
+.unlock-form {
+  display: flex;
+  gap: var(--space-2);
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.unlock-form input {
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  letter-spacing: var(--tracking-wide);
+  padding: 0.7em 1em;
+  border: 1px solid var(--colour-line);
+  border-radius: 2px;
+  background: var(--colour-paper-raised);
+  color: var(--colour-ink);
+  min-width: 14rem;
+}
+
+.unlock-form input:focus-visible {
+  outline: none;
+  border-color: var(--colour-accent);
+}
+
+.unlock-form button {
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+  letter-spacing: var(--tracking-wider);
+  text-transform: uppercase;
+  padding: 0.7em 1.4em;
+  border: 1px solid var(--colour-accent);
+  border-radius: 2px;
+  background: none;
+  color: var(--colour-accent);
+  cursor: pointer;
+  transition: background var(--duration-normal) var(--ease-quiet),
+              color var(--duration-normal) var(--ease-quiet);
+}
+
+.unlock-form button:hover,
+.unlock-form button:focus-visible {
+  background: var(--colour-accent);
+  color: var(--colour-paper);
+}
+
+.unlock-error {
+  margin-top: var(--space-3);
+  font-size: var(--text-sm);
+  color: var(--colour-ink-soft);
 }
 
 /* ---------------------------------------------------------------------
