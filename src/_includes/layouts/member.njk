@@ -1,0 +1,68 @@
+---
+layout: layouts/base.njk
+---
+
+<div class="member-header">
+  <div class="member-number">No. {{ number }}</div>
+  <h1 class="member-name">{{ name }}</h1>
+  <div class="member-meta">
+    <span>Member since {{ memberSince }}</span>
+    {% if role %}<span>{{ role }}</span>{% endif %}
+  </div>
+</div>
+
+<section>
+  <p class="eyebrow">Timeline</p>
+  <h2 class="section-title">A record, in order</h2>
+  <ul class="timeline">
+    {% for entry in timeline %}
+      <li>
+        <span class="date">{{ entry.date }}</span>
+        <h3 class="entry-title">{{ entry.title }}</h3>
+        <p>{{ entry.body }}</p>
+      </li>
+    {% endfor %}
+  </ul>
+</section>
+
+<section>
+  <p class="eyebrow">Shared Memories</p>
+  <h2 class="section-title">{{ memoriesTitle }}</h2>
+  {{ content | safe }}
+</section>
+
+{% if countries and countries.length %}
+<section>
+  <p class="eyebrow">Countries Visited Together</p>
+  <h2 class="section-title">{{ countries.length }}, so far</h2>
+  <ul class="countries">
+    {% for country in countries %}
+      <li>{{ country }}</li>
+    {% endfor %}
+  </ul>
+</section>
+{% endif %}
+
+{% if gallery and gallery.length %}
+<section>
+  <p class="eyebrow">Gallery</p>
+  <h2 class="section-title">Fragments</h2>
+  <div class="gallery-grid">
+    {% for image in gallery %}
+      <img src="{{ image.src | url }}" alt="{{ image.alt }}">
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+{% if personalMessage %}
+<section>
+  <p class="eyebrow" style="text-align:center;">Personal Message</p>
+  <p class="message">
+    {{ personalMessage }}
+    {% if personalMessageAttribution %}
+      <span class="message-attribution">{{ personalMessageAttribution }}</span>
+    {% endif %}
+  </p>
+</section>
+{% endif %}

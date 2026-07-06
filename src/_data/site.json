@@ -1,0 +1,9 @@
+{
+  "title": "Sodalitas",
+  "foundedYear": 2009,
+  "nav": [
+    { "label": "Members", "url": "/members/" },
+    { "label": "Charter", "url": "/charter/" },
+    { "label": "Archive", "url": "/archive/" }
+  ]
+}

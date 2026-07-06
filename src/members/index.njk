@@ -1,0 +1,18 @@
+---
+layout: layouts/base.njk
+title: Members
+permalink: "/members/index.html"
+---
+<div class="prose">
+  <h1>Members</h1>
+  <p>Each member holds their own key. This page lists the archive; it does not unlock it.</p>
+  <ul style="list-style: none; padding: 0;">
+    {% for member in collections.members %}
+      <li style="margin-bottom: 0.75rem;">
+        <a href="{{ member.url }}" style="color: var(--colour-ink); text-decoration: none; border-bottom: 1px solid var(--colour-line);">
+          No. {{ member.data.number }} — {{ member.data.name }}
+        </a>
+      </li>
+    {% endfor %}
+  </ul>
+</div>
