@@ -5,7 +5,6 @@
   const form = document.getElementById("unlock-form");
   const input = document.getElementById("unlock-code");
   const errorMessage = document.getElementById("unlock-error");
-  const content = document.getElementById("member-content");
 
   const salt = base64ToBytes(unlock.dataset.salt);
   const iv = base64ToBytes(unlock.dataset.iv);
@@ -44,9 +43,35 @@
     return JSON.parse(text);
   }
 
+  // Placeholder content is replaced in place — the page never goes
+  // empty, it just swaps from generic placeholder to the real thing.
+  // If a member genuinely has nothing for a given section (e.g. no
+  // gallery yet), that section is hidden once we actually know that,
+  // rather than left showing placeholder boxes forever.
   function renderContent(data) {
+    // Reveal the real name and meta now that the correct key's been
+    // entered — these were withheld behind a generic placeholder
+    // until this point, even though the encrypted content below is
+    // the actual sensitive part.
+    const nameEl = document.getElementById("member-name");
+    nameEl.textContent = nameEl.dataset.realName;
+
+    const metaEl = document.getElementById("member-meta");
+    const since = metaEl.dataset.since;
+    const role = metaEl.dataset.role;
+    metaEl.innerHTML = "";
+    const sinceSpan = document.createElement("span");
+    sinceSpan.textContent = `Member since ${since}`;
+    metaEl.appendChild(sinceSpan);
+    if (role) {
+      const roleSpan = document.createElement("span");
+      roleSpan.textContent = role;
+      metaEl.appendChild(roleSpan);
+    }
+
+    const timelineList = document.getElementById("timeline-list");
     if (data.timeline && data.timeline.length) {
-      const list = document.getElementById("timeline-list");
+      timelineList.innerHTML = "";
       data.timeline.forEach((entry) => {
         const li = document.createElement("li");
 
@@ -62,53 +87,59 @@
         body.textContent = entry.body;
 
         li.append(date, title, body);
-        list.appendChild(li);
+        timelineList.appendChild(li);
       });
-      document.getElementById("timeline-section").hidden = false;
+    } else {
+      document.getElementById("timeline-section").hidden = true;
     }
 
     if (data.memoriesTitle || data.sharedMemories) {
       document.getElementById("memories-title").textContent = data.memoriesTitle || "";
       document.getElementById("memories-body").textContent = data.sharedMemories || "";
-      document.getElementById("memories-section").hidden = false;
+    } else {
+      document.getElementById("memories-section").hidden = true;
     }
 
+    const countriesList = document.getElementById("countries-list");
     if (data.countries && data.countries.length) {
       document.getElementById("countries-count").textContent = `${data.countries.length}, so far`;
-      const list = document.getElementById("countries-list");
+      countriesList.innerHTML = "";
       data.countries.forEach((country) => {
         const li = document.createElement("li");
         li.textContent = country;
-        list.appendChild(li);
+        countriesList.appendChild(li);
       });
-      document.getElementById("countries-section").hidden = false;
+    } else {
+      document.getElementById("countries-section").hidden = true;
     }
 
+    const galleryGrid = document.getElementById("gallery-grid");
     if (data.gallery && data.gallery.length) {
-      const grid = document.getElementById("gallery-grid");
+      galleryGrid.innerHTML = "";
       data.gallery.forEach((image) => {
         const img = document.createElement("img");
         img.src = image.src;
         img.alt = image.alt || "";
         img.loading = "lazy";
-        grid.appendChild(img);
+        galleryGrid.appendChild(img);
       });
-      document.getElementById("gallery-section").hidden = false;
+    } else {
+      document.getElementById("gallery-section").hidden = true;
     }
 
     if (data.personalMessage) {
       const messageEl = document.getElementById("message-text");
-      messageEl.textContent = data.personalMessage;
+      const attributionEl = document.getElementById("message-attribution");
+      messageEl.childNodes[0].textContent = data.personalMessage;
       if (data.personalMessageAttribution) {
-        const attribution = document.createElement("span");
-        attribution.className = "message-attribution";
-        attribution.textContent = data.personalMessageAttribution;
-        messageEl.appendChild(attribution);
+        attributionEl.textContent = data.personalMessageAttribution;
+      } else {
+        attributionEl.remove();
       }
-      document.getElementById("message-section").hidden = false;
+    } else {
+      document.getElementById("message-section").hidden = true;
     }
 
-    content.hidden = false;
     unlock.hidden = true;
   }
 
