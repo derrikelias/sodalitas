@@ -9,7 +9,7 @@ permalink: "/members/index.html"
   <ul style="list-style: none; padding: 0;">
     {% for member in collections.members %}
       <li style="margin-bottom: 0.75rem;">
-        <a href="{{ member.url }}" style="color: var(--colour-ink); text-decoration: none; border-bottom: 1px solid var(--colour-line);">
+        <a href="{{ member.url | url }}" style="color: var(--colour-ink); text-decoration: none; border-bottom: 1px solid var(--colour-line);">
           No. {{ member.data.number }} — {{ member.data.name }}
         </a>
       </li>
