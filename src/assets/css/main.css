@@ -196,6 +196,25 @@ header.site {
   gap: var(--space-4);
 }
 
+.site-minimal {
+  position: relative;
+  justify-content: center;
+}
+
+.brand-center {
+  margin: 0 auto;
+}
+
+.theme-toggle-standalone {
+  position: absolute;
+  right: var(--space-4);
+  top: 50%;
+  transform: translateY(-50%);
+  padding-left: 0;
+  margin-left: 0;
+  border-left: none;
+}
+
 nav.site a {
   color: var(--colour-ink-soft);
   text-decoration: none;

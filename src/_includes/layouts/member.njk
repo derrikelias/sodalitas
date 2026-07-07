@@ -1,12 +1,13 @@
 ---
 layout: layouts/base.njk
+minimalHeader: true
 ---
 
 <div class="member-header">
   <div class="member-number">No. {{ number }}</div>
-  <h1 class="member-name" id="member-name" data-real-name="{{ name }}">A Private Archive</h1>
+  <h1 class="member-name" id="member-name" data-real-name="{{ name }}">Sealed</h1>
   <div class="member-meta" id="member-meta" data-since="{{ memberSince }}" data-role="{{ role }}">
-    <span>Held for one member only</span>
+    <span>Awaiting its key</span>
   </div>
 </div>
 
@@ -18,8 +19,7 @@ layout: layouts/base.njk
   data-ciphertext="{{ ciphertext }}"
   data-iterations="{{ pbkdf2Iterations }}"
 >
-  <p class="eyebrow" style="text-align:center;">Private Archive</p>
-  <p class="unlock-copy">This page belongs to No. {{ number }}.</p>
+  <p class="unlock-copy">Only its key opens this page.</p>
   <form id="unlock-form" class="unlock-form">
     <input
       type="password"
@@ -35,68 +35,34 @@ layout: layouts/base.njk
   <p id="unlock-error" class="unlock-error" hidden>That did not work. Please try again.</p>
 </div>
 
-<div id="member-content">
-  <section id="timeline-section">
+<div id="member-content" hidden>
+  <section id="timeline-section" hidden>
     <p class="eyebrow">Timeline</p>
     <h2 class="section-title">A record, in order</h2>
-    <ul class="timeline" id="timeline-list">
-      <li>
-        <span class="date">March 2009</span>
-        <h3 class="entry-title">Lorem ipsum dolor sit amet</h3>
-        <p>Consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua, remembered still for the way the evening ended.</p>
-      </li>
-      <li>
-        <span class="date">July 2014</span>
-        <h3 class="entry-title">Ut enim ad minim veniam</h3>
-        <p>Quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat, a week neither of us has ever properly explained to anyone else.</p>
-      </li>
-      <li>
-        <span class="date">September 2021</span>
-        <h3 class="entry-title">Duis aute irure dolor</h3>
-        <p>In reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur, somewhere between the third and fourth stop.</p>
-      </li>
-    </ul>
+    <ul class="timeline" id="timeline-list"></ul>
   </section>
 
-  <section id="memories-section">
+  <section id="memories-section" hidden>
     <p class="eyebrow">Shared Memories</p>
-    <h2 class="section-title" id="memories-title">Lorem ipsum dolor sit amet</h2>
-    <p id="memories-body" style="line-height: var(--leading-relaxed); color: var(--colour-ink-soft); max-width: var(--content-width-narrow);">Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo.</p>
+    <h2 class="section-title" id="memories-title"></h2>
+    <p id="memories-body" style="line-height: var(--leading-relaxed); color: var(--colour-ink-soft); max-width: var(--content-width-narrow);"></p>
   </section>
 
-  <section id="countries-section">
+  <section id="countries-section" hidden>
     <p class="eyebrow">Countries Visited Together</p>
-    <h2 class="section-title" id="countries-count">7, so far</h2>
-    <ul class="countries" id="countries-list">
-      <li>Portugal</li>
-      <li>Japan</li>
-      <li>Iceland</li>
-      <li>Morocco</li>
-      <li>Slovenia</li>
-      <li>Vietnam</li>
-      <li>Chile</li>
-    </ul>
+    <h2 class="section-title" id="countries-count"></h2>
+    <ul class="countries" id="countries-list"></ul>
   </section>
 
-  <section id="gallery-section">
+  <section id="gallery-section" hidden>
     <p class="eyebrow">Gallery</p>
     <h2 class="section-title">Fragments</h2>
-    <div class="gallery-grid" id="gallery-grid">
-      <div>Image 01</div>
-      <div>Image 02</div>
-      <div>Image 03</div>
-      <div>Image 04</div>
-      <div>Image 05</div>
-      <div>Image 06</div>
-    </div>
+    <div class="gallery-grid" id="gallery-grid"></div>
   </section>
 
-  <section id="message-section">
+  <section id="message-section" hidden>
     <p class="eyebrow" style="text-align:center;">Personal Message</p>
-    <p class="message" id="message-text">
-      "Lorem ipsum dolor sit amet, consectetur adipiscing elit — some things are only true because we decided, years ago, that they would be."
-      <span class="message-attribution" id="message-attribution">— written, privately, for you</span>
-    </p>
+    <p class="message" id="message-text"></p>
   </section>
 </div>
 
