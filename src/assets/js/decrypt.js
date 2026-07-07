@@ -7,6 +7,15 @@
   const errorMessage = document.getElementById("unlock-error");
   const content = document.getElementById("member-content");
 
+  // The wordmark normally links home, but while this page is still
+  // locked, clicking it should just leave the visitor here rather
+  // than let them wander off before proving they hold the key.
+  const brandLink = document.getElementById("site-brand-link");
+  function blockBrandLink(event) {
+    event.preventDefault();
+  }
+  if (brandLink) brandLink.addEventListener("click", blockBrandLink);
+
   const salt = base64ToBytes(unlock.dataset.salt);
   const iv = base64ToBytes(unlock.dataset.iv);
   const ciphertext = base64ToBytes(unlock.dataset.ciphertext);
@@ -61,6 +70,7 @@
     if (brand) brand.classList.remove("brand-center");
     const toggle = document.getElementById("theme-toggle");
     if (toggle) toggle.classList.remove("theme-toggle-standalone");
+    if (brandLink) brandLink.removeEventListener("click", blockBrandLink);
 
     const nameEl = document.getElementById("member-name");
     nameEl.textContent = nameEl.dataset.realName;
