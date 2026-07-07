@@ -49,6 +49,19 @@
   // which only happens after a correct key has genuinely decrypted
   // the real content — there is no placeholder standing in for it.
   function renderContent(data) {
+    // Restore the ordinary header now that the page is genuinely
+    // unlocked — nav links reappear, the brand mark returns to its
+    // normal left-aligned position, and the toggle regains its
+    // divider now that it once again sits beside the nav.
+    const nav = document.getElementById("site-nav");
+    if (nav) nav.hidden = false;
+    const header = document.getElementById("site-header");
+    if (header) header.classList.remove("site-minimal");
+    const brand = document.getElementById("site-brand");
+    if (brand) brand.classList.remove("brand-center");
+    const toggle = document.getElementById("theme-toggle");
+    if (toggle) toggle.classList.remove("theme-toggle-standalone");
+
     const nameEl = document.getElementById("member-name");
     nameEl.textContent = nameEl.dataset.realName;
 

@@ -9,11 +9,7 @@
 </head>
 <body>
 
-  {% if minimalHeader %}
-    {% include "partials/header-minimal.njk" %}
-  {% else %}
-    {% include "partials/header.njk" %}
-  {% endif %}
+  {% include "partials/header.njk" %}
 
   <main>
     {{ content | safe }}
