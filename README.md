@@ -37,10 +37,21 @@ src/
 
 ## Adding a member
 
-Copy `src/members/003-isabelle-marchetti.md`, rename it, and fill in the
-front matter fields (`number`, `name`, `memberSince`, `timeline`,
-`countries`, `gallery`, `personalMessage`). The body text below the front
-matter becomes the "Shared Memories" section. No template editing required.
+1. Add their number and public details (`number`, `name`, `memberSince`,
+   `role`) to a new file in `src/members/`, copying the front matter
+   structure from `003-isabelle-marchetti.md` — but leave out `salt`,
+   `iv`, `ciphertext`, and `encrypted`; those get added automatically.
+2. Create `private/members-plaintext/<number>/content.json` with their
+   real timeline, memories, and personal message (copy the shape from
+   `003/content.example.json`).
+3. Drop their real photos into
+   `private/members-plaintext/<number>/gallery/`.
+4. Add their access code to `private/codes.json`.
+5. Run `npm run encrypt`.
+
+Only the `.md` file in `src/members/` needs committing afterwards —
+everything in `private/` stays on your computer. See
+`private/README.md` for the full detail.
 
 ## Going live on sodalitas.cc
 
@@ -95,14 +106,4 @@ waiting for the daily schedule or an actual domain failure.
 
 ## Outstanding before going live
 
-1. **Self-host the fonts.** `base.njk` currently loads Fraunces and Work
-   Sans from Google's CDN, for convenience while building. Download the
-   variable font files, place them in `src/assets/fonts/`, add `@font-face`
-   rules to the top of `main.css`, and remove the two `<link>` tags in
-   `base.njk`.
-2. **Access codes.** This scaffold has no encryption or access-gating yet
-   — every member page renders in the open. The per-member decrypt-on-entry
-   flow (option C, discussed separately) still needs building.
-3. **Favicon.** A simplified version of the seal mark, sized for 16–32px.
-4. **Real gallery images.** Replace the empty `gallery: []` arrays with
-   actual image paths once photos are ready.
+1. **Favicon.** A simplified version of the seal mark, sized for 16–32px.

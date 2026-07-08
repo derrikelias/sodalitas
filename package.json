@@ -10,6 +10,7 @@
   },
   "devDependencies": {
     "@11ty/eleventy": "^3.0.0",
-    "gray-matter": "^4.0.3"
+    "gray-matter": "^4.0.3",
+    "jimp": "^0.22.12"
   }
 }

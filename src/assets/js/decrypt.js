@@ -131,7 +131,11 @@
       const galleryGrid = document.getElementById("gallery-grid");
       data.gallery.forEach((image) => {
         const img = document.createElement("img");
-        img.src = image.src;
+        // Photos are embedded directly in the decrypted payload as
+        // base64 — there is no separate image file being requested,
+        // which is the whole point: nothing photo-related ever sat
+        // in the repository as a plain, viewable file.
+        img.src = `data:${image.mime};base64,${image.data}`;
         img.alt = image.alt || "";
         img.loading = "lazy";
         galleryGrid.appendChild(img);

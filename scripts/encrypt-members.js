@@ -1,11 +1,16 @@
 // Run locally only: `npm run encrypt`
 //
-// Reads real member content from private/members-plaintext/*.json and
-// access codes from private/codes.json — neither of which are ever
-// committed (see .gitignore) — and writes the encrypted result directly
-// into the matching src/members/*.md file's front matter. That .md file
-// is what gets committed; by the time it's saved, it contains only
-// ciphertext, a salt, and an initialisation vector — nothing readable.
+// Reads real member content from private/members-plaintext/<number>/ —
+// content.json for text, gallery/*.jpg for photos — and access codes
+// from private/codes.json. Neither of those are ever committed (see
+// .gitignore). Everything gets bundled into ONE encrypted payload per
+// member and written into that member's src/members/*.md front matter.
+// That .md file is what gets committed; by the time it's saved, it
+// contains only ciphertext, a salt, and an initialisation vector —
+// nothing readable, and no separate image files sitting in the repo
+// either. Photos are resized and compressed automatically so a handful
+// of full-resolution source photos don't balloon the repo size once
+// base64-encoded and encrypted — see MAX_IMAGE_DIMENSION below.
 //
 // Uses PBKDF2 (SHA-256, 250,000 iterations) to derive a key from the
 // member's access code, then AES-256-GCM to encrypt. Both are standard
@@ -16,6 +21,7 @@ const fs = require("fs");
 const path = require("path");
 const crypto = require("crypto");
 const matter = require("gray-matter");
+const Jimp = require("jimp");
 
 const PRIVATE_DIR = path.join(__dirname, "..", "private");
 const PLAINTEXT_DIR = path.join(PRIVATE_DIR, "members-plaintext");
@@ -26,6 +32,10 @@ const PBKDF2_ITERATIONS = 250000;
 const KEY_LENGTH = 32; // 256-bit
 const SALT_LENGTH = 16;
 const IV_LENGTH = 12; // standard for AES-GCM
+
+const MAX_IMAGE_DIMENSION = 1600; // longest edge, in pixels
+const JPEG_QUALITY = 82;
+const IMAGE_EXTENSIONS = [".jpg", ".jpeg", ".png", ".webp"];
 
 function loadCodes() {
   if (!fs.existsSync(CODES_FILE)) {
@@ -48,6 +58,48 @@ function findMemberFile(number) {
     }
   }
   return null;
+}
+
+// Resizes to a sane maximum, re-compresses, and returns base64 — kept
+// as a data URI-ready pair (mime + data) so decrypt.js can build an
+// <img src="data:..."> directly with no separate file to fetch.
+async function processImage(filePath) {
+  const image = await Jimp.read(filePath);
+  const { width, height } = image.bitmap;
+  const longestEdge = Math.max(width, height);
+
+  if (longestEdge > MAX_IMAGE_DIMENSION) {
+    const scale = MAX_IMAGE_DIMENSION / longestEdge;
+    image.resize(Math.round(width * scale), Math.round(height * scale));
+  }
+
+  image.quality(JPEG_QUALITY);
+  const buffer = await image.getBufferAsync(Jimp.MIME_JPEG);
+
+  return { mime: "image/jpeg", data: buffer.toString("base64") };
+}
+
+async function buildGallery(memberDir) {
+  const galleryDir = path.join(memberDir, "gallery");
+  if (!fs.existsSync(galleryDir)) return [];
+
+  const captionsPath = path.join(galleryDir, "captions.json");
+  const captions = fs.existsSync(captionsPath)
+    ? JSON.parse(fs.readFileSync(captionsPath, "utf8"))
+    : {};
+
+  const imageFiles = fs
+    .readdirSync(galleryDir)
+    .filter((f) => IMAGE_EXTENSIONS.includes(path.extname(f).toLowerCase()))
+    .sort();
+
+  const gallery = [];
+  for (const filename of imageFiles) {
+    console.log(`  Processing photo: ${filename}`);
+    const { mime, data } = await processImage(path.join(galleryDir, filename));
+    gallery.push({ mime, data, alt: captions[filename] || "" });
+  }
+  return gallery;
 }
 
 function encryptPayload(plaintextObject, code) {
@@ -73,7 +125,7 @@ function encryptPayload(plaintextObject, code) {
   };
 }
 
-function run() {
+async function run() {
   const codes = loadCodes();
 
   if (!fs.existsSync(PLAINTEXT_DIR)) {
@@ -81,32 +133,40 @@ function run() {
     process.exit(1);
   }
 
-  const plaintextFiles = fs
-    .readdirSync(PLAINTEXT_DIR)
-    .filter((f) => f.endsWith(".json") && !f.endsWith(".example.json"));
+  const memberFolders = fs
+    .readdirSync(PLAINTEXT_DIR, { withFileTypes: true })
+    .filter((entry) => entry.isDirectory())
+    .map((entry) => entry.name);
 
-  if (plaintextFiles.length === 0) {
-    console.log("No plaintext member files found to encrypt.");
+  if (memberFolders.length === 0) {
+    console.log("No plaintext member folders found to encrypt.");
     return;
   }
 
-  for (const file of plaintextFiles) {
-    const number = path.basename(file, ".json");
-    const code = codes[number];
+  for (const number of memberFolders) {
+    const memberDir = path.join(PLAINTEXT_DIR, number);
+    const contentPath = path.join(memberDir, "content.json");
 
-    if (!code) {
-      console.warn(`Skipping ${file} — no matching code for member ${number} in codes.json`);
+    if (!fs.existsSync(contentPath)) {
+      console.warn(`Skipping ${number}/ — no content.json found inside it`);
       continue;
     }
 
-    const plaintextPath = path.join(PLAINTEXT_DIR, file);
-    const plaintextObject = JSON.parse(fs.readFileSync(plaintextPath, "utf8"));
+    const code = codes[number];
+    if (!code) {
+      console.warn(`Skipping ${number}/ — no matching code for member ${number} in codes.json`);
+      continue;
+    }
 
     const memberFilePath = findMemberFile(number);
     if (!memberFilePath) {
-      console.warn(`Skipping ${file} — no src/members/*.md file found with number: "${number}"`);
+      console.warn(`Skipping ${number}/ — no src/members/*.md file found with number: "${number}"`);
       continue;
     }
+
+    console.log(`Encrypting member ${number}...`);
+    const plaintextObject = JSON.parse(fs.readFileSync(contentPath, "utf8"));
+    plaintextObject.gallery = await buildGallery(memberDir);
 
     const { salt, iv, ciphertext, pbkdf2Iterations } = encryptPayload(plaintextObject, code);
 
@@ -136,7 +196,7 @@ function run() {
     const output = matter.stringify("", updatedData);
     fs.writeFileSync(memberFilePath, output);
 
-    console.log(`Encrypted member ${number} → ${path.relative(process.cwd(), memberFilePath)}`);
+    console.log(`  → ${path.relative(process.cwd(), memberFilePath)} (${plaintextObject.gallery.length} photo(s) embedded)`);
   }
 
   console.log("\nDone. Only the .md files under src/members/ need to be committed —");
