@@ -184,6 +184,12 @@ header.site {
   color: var(--colour-accent);
 }
 
+.brand .logo-mark {
+  width: auto;
+  height: 2.1rem;
+  aspect-ratio: 610 / 1259;
+}
+
 .mark {
   font-family: var(--font-heading);
   font-size: var(--text-lg);
