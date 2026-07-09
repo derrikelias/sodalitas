@@ -3,19 +3,26 @@
 // Reads real member content from private/members-plaintext/<number>/ —
 // content.json for text, gallery/*.jpg for photos — and access codes
 // from private/codes.json. Neither of those are ever committed (see
-// .gitignore). Everything gets bundled into ONE encrypted payload per
-// member and written into that member's src/members/*.md front matter.
-// That .md file is what gets committed; by the time it's saved, it
-// contains only ciphertext, a salt, and an initialisation vector —
-// nothing readable, and no separate image files sitting in the repo
-// either. Photos are resized and compressed automatically so a handful
-// of full-resolution source photos don't balloon the repo size once
-// base64-encoded and encrypted — see MAX_IMAGE_DIMENSION below.
+// .gitignore).
 //
-// Uses PBKDF2 (SHA-256, 250,000 iterations) to derive a key from the
-// member's access code, then AES-256-GCM to encrypt. Both are standard
-// Web Crypto operations, so the browser can reverse this exactly with
-// no external libraries — see src/assets/js/decrypt.js.
+// Text content is encrypted as one payload and written into that
+// member's src/members/*.md front matter. Photos are encrypted
+// SEPARATELY, one file each, and written to
+// src/assets/gallery-encrypted/<number>/ — genuine committed files in
+// the repo, visible in its history, just unreadable without the key.
+// Both use the same derived key (from the member's code), but every
+// encryption — the text payload, and each individual photo — gets its
+// own fresh initialisation vector, which is essential: reusing an IV
+// with the same key breaks AES-GCM's security guarantees.
+//
+// Photos are resized and compressed automatically so full-resolution
+// source photos don't balloon the repo size — see MAX_IMAGE_DIMENSION
+// below.
+//
+// Uses PBKDF2 (SHA-256, 250,000 iterations) to derive the key, then
+// AES-256-GCM to encrypt. Both are standard Web Crypto operations, so
+// the browser can reverse this exactly with no external libraries —
+// see src/assets/js/decrypt.js.
 
 const fs = require("fs");
 const path = require("path");
@@ -27,6 +34,7 @@ const PRIVATE_DIR = path.join(__dirname, "..", "private");
 const PLAINTEXT_DIR = path.join(PRIVATE_DIR, "members-plaintext");
 const CODES_FILE = path.join(PRIVATE_DIR, "codes.json");
 const MEMBERS_DIR = path.join(__dirname, "..", "src", "members");
+const GALLERY_ENCRYPTED_DIR = path.join(__dirname, "..", "src", "assets", "gallery-encrypted");
 
 const PBKDF2_ITERATIONS = 250000;
 const KEY_LENGTH = 32; // 256-bit
@@ -60,9 +68,23 @@ function findMemberFile(number) {
   return null;
 }
 
-// Resizes to a sane maximum, re-compresses, and returns base64 — kept
-// as a data URI-ready pair (mime + data) so decrypt.js can build an
-// <img src="data:..."> directly with no separate file to fetch.
+function deriveKey(code, salt) {
+  return crypto.pbkdf2Sync(code, salt, PBKDF2_ITERATIONS, KEY_LENGTH, "sha256");
+}
+
+// One encryption operation: fresh IV every time, same key reused
+// safely across many calls as long as the IV never repeats.
+function encryptBuffer(buffer, key) {
+  const iv = crypto.randomBytes(IV_LENGTH);
+  const cipher = crypto.createCipheriv("aes-256-gcm", key, iv);
+  const encrypted = Buffer.concat([cipher.update(buffer), cipher.final()]);
+  const authTag = cipher.getAuthTag();
+  // Web Crypto's SubtleCrypto expects the auth tag appended to the
+  // ciphertext, not separate — matching that here so the browser can
+  // decrypt this with no adjustment.
+  return { iv: iv.toString("base64"), ciphertext: Buffer.concat([encrypted, authTag]) };
+}
+
 async function processImage(filePath) {
   const image = await Jimp.read(filePath);
   const { width, height } = image.bitmap;
@@ -74,12 +96,14 @@ async function processImage(filePath) {
   }
 
   image.quality(JPEG_QUALITY);
-  const buffer = await image.getBufferAsync(Jimp.MIME_JPEG);
-
-  return { mime: "image/jpeg", data: buffer.toString("base64") };
+  return image.getBufferAsync(Jimp.MIME_JPEG);
 }
 
-async function buildGallery(memberDir) {
+// Encrypts each photo individually and writes it as its own committed
+// file. Clears out the member's existing encrypted-gallery folder
+// first, so removing a source photo actually removes its encrypted
+// counterpart too, rather than leaving an orphaned file behind.
+async function buildGallery(memberDir, number, key) {
   const galleryDir = path.join(memberDir, "gallery");
   if (!fs.existsSync(galleryDir)) return [];
 
@@ -93,45 +117,41 @@ async function buildGallery(memberDir) {
     .filter((f) => IMAGE_EXTENSIONS.includes(path.extname(f).toLowerCase()))
     .sort();
 
+  const outputDir = path.join(GALLERY_ENCRYPTED_DIR, number);
+  fs.rmSync(outputDir, { recursive: true, force: true });
+  if (imageFiles.length > 0) fs.mkdirSync(outputDir, { recursive: true });
+
   const gallery = [];
-  for (const filename of imageFiles) {
+
+  for (let i = 0; i < imageFiles.length; i++) {
+    const filename = imageFiles[i];
     console.log(`  Processing photo: ${filename}`);
-    const { mime, data } = await processImage(path.join(galleryDir, filename));
-    gallery.push({ mime, data, alt: captions[filename] || "" });
+    const jpegBuffer = await processImage(path.join(galleryDir, filename));
+    const { iv, ciphertext } = encryptBuffer(jpegBuffer, key);
+
+    const outputFilename = `${String(i + 1).padStart(2, "0")}.enc`;
+    fs.writeFileSync(path.join(outputDir, outputFilename), ciphertext);
+
+    gallery.push({
+      file: outputFilename,
+      iv,
+      mime: "image/jpeg",
+      alt: captions[filename] || "",
+    });
   }
   return gallery;
 }
 
-function encryptPayload(plaintextObject, code) {
-  const salt = crypto.randomBytes(SALT_LENGTH);
-  const iv = crypto.randomBytes(IV_LENGTH);
-  const key = crypto.pbkdf2Sync(code, salt, PBKDF2_ITERATIONS, KEY_LENGTH, "sha256");
-
-  const cipher = crypto.createCipheriv("aes-256-gcm", key, iv);
-  const plaintextBuffer = Buffer.from(JSON.stringify(plaintextObject), "utf8");
-  const encrypted = Buffer.concat([cipher.update(plaintextBuffer), cipher.final()]);
-  const authTag = cipher.getAuthTag();
-
-  // Web Crypto's SubtleCrypto expects the auth tag appended to the
-  // ciphertext, not separate — matching that here so the browser can
-  // decrypt this with no adjustment.
-  const combined = Buffer.concat([encrypted, authTag]);
-
-  return {
-    salt: salt.toString("base64"),
-    iv: iv.toString("base64"),
-    ciphertext: combined.toString("base64"),
-    pbkdf2Iterations: PBKDF2_ITERATIONS,
-  };
-}
-
-async function run() {
-  const codes = loadCodes();
-
+function run_check_setup() {
   if (!fs.existsSync(PLAINTEXT_DIR)) {
     console.error("No private/members-plaintext/ folder found. Nothing to encrypt.");
     process.exit(1);
   }
+}
+
+async function run() {
+  const codes = loadCodes();
+  run_check_setup();
 
   const memberFolders = fs
     .readdirSync(PLAINTEXT_DIR, { withFileTypes: true })
@@ -165,19 +185,29 @@ async function run() {
     }
 
     console.log(`Encrypting member ${number}...`);
-    const plaintextObject = JSON.parse(fs.readFileSync(contentPath, "utf8"));
-    plaintextObject.gallery = await buildGallery(memberDir);
 
-    const { salt, iv, ciphertext, pbkdf2Iterations } = encryptPayload(plaintextObject, code);
+    // One salt, one derived key, reused for the text payload and every
+    // photo — safe because each individual encryption gets its own
+    // fresh IV (see encryptBuffer above).
+    const salt = crypto.randomBytes(SALT_LENGTH);
+    const key = deriveKey(code, salt);
+
+    const galleryMeta = await buildGallery(memberDir, number, key);
+
+    const plaintextObject = JSON.parse(fs.readFileSync(contentPath, "utf8"));
+    plaintextObject.gallery = galleryMeta;
+
+    const contentBuffer = Buffer.from(JSON.stringify(plaintextObject), "utf8");
+    const { iv, ciphertext } = encryptBuffer(contentBuffer, key);
 
     const existing = matter.read(memberFilePath);
     const updatedData = {
       ...existing.data,
       encrypted: true,
-      salt,
+      salt: salt.toString("base64"),
       iv,
-      ciphertext,
-      pbkdf2Iterations,
+      ciphertext: ciphertext.toString("base64"),
+      pbkdf2Iterations: PBKDF2_ITERATIONS,
     };
 
     // Remove any leftover plaintext fields from earlier drafts — they've
@@ -191,16 +221,16 @@ async function run() {
     delete updatedData.personalMessage;
     delete updatedData.personalMessageAttribution;
 
-    // The Markdown body itself also becomes redundant once encrypted —
-    // the real prose now lives inside the ciphertext.
     const output = matter.stringify("", updatedData);
     fs.writeFileSync(memberFilePath, output);
 
-    console.log(`  → ${path.relative(process.cwd(), memberFilePath)} (${plaintextObject.gallery.length} photo(s) embedded)`);
+    console.log(`  → ${path.relative(process.cwd(), memberFilePath)}`);
+    console.log(`  → ${galleryMeta.length} photo(s) encrypted to src/assets/gallery-encrypted/${number}/`);
   }
 
-  console.log("\nDone. Only the .md files under src/members/ need to be committed —");
-  console.log("everything in private/ should stay right where it is, off GitHub.");
+  console.log("\nDone. Commit the .md files under src/members/ AND the folders under");
+  console.log("src/assets/gallery-encrypted/ — both are safe to commit, since both");
+  console.log("contain only ciphertext. Everything in private/ stays off GitHub.");
 }
 
 run();

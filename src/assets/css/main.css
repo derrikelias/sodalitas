@@ -426,8 +426,77 @@ h2.section-title {
   transition: opacity var(--duration-slow) var(--ease-gentle);
 }
 
+.gallery-grid img {
+  cursor: pointer;
+}
+
 .gallery-grid div:hover,
 .gallery-grid img:hover { opacity: 0.75; }
+
+/* ---------------------------------------------------------------------
+   Lightbox — a quiet overlay, not a generic modal component. Same
+   overlay tone in both themes, since it's dimming the whole page
+   regardless of which theme sits beneath it.
+   --------------------------------------------------------------------- */
+.lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(10, 9, 7, 0.92);
+  padding: var(--space-5);
+}
+
+.lightbox img {
+  max-width: 90vw;
+  max-height: 82vh;
+  object-fit: contain;
+  border: 1px solid rgba(247, 245, 240, 0.15);
+}
+
+.lightbox-close {
+  position: absolute;
+  top: var(--space-4);
+  right: var(--space-4);
+  background: none;
+  border: none;
+  color: var(--colour-paper);
+  font-size: 2rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0.25rem 0.6rem;
+  opacity: 0.8;
+  transition: opacity var(--duration-fast) var(--ease-quiet);
+}
+
+.lightbox-close:hover,
+.lightbox-close:focus-visible {
+  opacity: 1;
+}
+
+.lightbox-download {
+  position: absolute;
+  bottom: var(--space-4);
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+  letter-spacing: var(--tracking-wider);
+  text-transform: uppercase;
+  color: var(--colour-paper);
+  text-decoration: none;
+  border: 1px solid rgba(247, 245, 240, 0.4);
+  border-radius: 2px;
+  padding: 0.6em 1.2em;
+  transition: border-color var(--duration-fast) var(--ease-quiet);
+}
+
+.lightbox-download:hover,
+.lightbox-download:focus-visible {
+  border-color: var(--colour-paper);
+}
 
 /* ---------------------------------------------------------------------
    Personal message

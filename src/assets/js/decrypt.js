@@ -20,6 +20,7 @@
   const iv = base64ToBytes(unlock.dataset.iv);
   const ciphertext = base64ToBytes(unlock.dataset.ciphertext);
   const iterations = parseInt(unlock.dataset.iterations, 10);
+  const galleryBase = unlock.dataset.galleryBase;
 
   function base64ToBytes(base64) {
     const binary = atob(base64);
@@ -50,14 +51,82 @@
     const key = await deriveKey(passphrase);
     const decrypted = await crypto.subtle.decrypt({ name: "AES-GCM", iv }, key, ciphertext);
     const text = new TextDecoder().decode(decrypted);
-    return JSON.parse(text);
+    return { data: JSON.parse(text), key };
+  }
+
+  // Each photo is its own committed, encrypted file — fetched here and
+  // decrypted with the SAME key already derived from the member's code,
+  // but each photo has its own unique IV (stored alongside it in the
+  // decrypted text payload), matching how they were encrypted.
+  async function fetchAndDecryptPhoto(entry, key) {
+    const response = await fetch(galleryBase + entry.file);
+    const encryptedBuffer = await response.arrayBuffer();
+    const photoIv = base64ToBytes(entry.iv);
+    const decryptedBuffer = await crypto.subtle.decrypt(
+      { name: "AES-GCM", iv: photoIv },
+      key,
+      encryptedBuffer
+    );
+    const blob = new Blob([decryptedBuffer], { type: entry.mime });
+    return URL.createObjectURL(blob);
+  }
+
+  // Built once, reused for every photo — a plain overlay with the
+  // image shown larger, and a direct download link to the same
+  // already-decrypted file, so no second fetch or re-decrypt is
+  // needed just to save it.
+  let lightboxParts;
+  function buildLightbox() {
+    const lightbox = document.createElement("div");
+    lightbox.className = "lightbox";
+    lightbox.hidden = true;
+
+    const img = document.createElement("img");
+    lightbox.appendChild(img);
+
+    const closeBtn = document.createElement("button");
+    closeBtn.className = "lightbox-close";
+    closeBtn.type = "button";
+    closeBtn.setAttribute("aria-label", "Close");
+    closeBtn.textContent = "×";
+    lightbox.appendChild(closeBtn);
+
+    const downloadLink = document.createElement("a");
+    downloadLink.className = "lightbox-download";
+    downloadLink.textContent = "Download";
+    lightbox.appendChild(downloadLink);
+
+    closeBtn.addEventListener("click", closeLightbox);
+    lightbox.addEventListener("click", (e) => {
+      if (e.target === lightbox) closeLightbox();
+    });
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && !lightbox.hidden) closeLightbox();
+    });
+
+    document.body.appendChild(lightbox);
+    return { lightbox, img, downloadLink };
+  }
+
+  function openLightbox(objectUrl, alt, index) {
+    if (!lightboxParts) lightboxParts = buildLightbox();
+    const { lightbox, img, downloadLink } = lightboxParts;
+    img.src = objectUrl;
+    img.alt = alt || "";
+    downloadLink.href = objectUrl;
+    downloadLink.download = `sodalitas-photo-${String(index + 1).padStart(2, "0")}.jpg`;
+    lightbox.hidden = false;
+  }
+
+  function closeLightbox() {
+    if (lightboxParts) lightboxParts.lightbox.hidden = true;
   }
 
   // Every section starts hidden and empty in the actual page markup.
   // Nothing here is revealed or populated until this function runs,
   // which only happens after a correct key has genuinely decrypted
   // the real content — there is no placeholder standing in for it.
-  function renderContent(data) {
+  async function renderContent(data, key) {
     // Restore the ordinary header now that the page is genuinely
     // unlocked — nav links reappear, the brand mark returns to its
     // normal left-aligned position, and the toggle regains its
@@ -129,15 +198,23 @@
 
     if (data.gallery && data.gallery.length) {
       const galleryGrid = document.getElementById("gallery-grid");
-      data.gallery.forEach((image) => {
+      const photoUrls = await Promise.all(
+        data.gallery.map((entry) => fetchAndDecryptPhoto(entry, key))
+      );
+      photoUrls.forEach((objectUrl, i) => {
         const img = document.createElement("img");
-        // Photos are embedded directly in the decrypted payload as
-        // base64 — there is no separate image file being requested,
-        // which is the whole point: nothing photo-related ever sat
-        // in the repository as a plain, viewable file.
-        img.src = `data:${image.mime};base64,${image.data}`;
-        img.alt = image.alt || "";
+        img.src = objectUrl;
+        img.alt = data.gallery[i].alt || "";
         img.loading = "lazy";
+        img.tabIndex = 0;
+        img.setAttribute("role", "button");
+        img.addEventListener("click", () => openLightbox(objectUrl, img.alt, i));
+        img.addEventListener("keydown", (e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            openLightbox(objectUrl, img.alt, i);
+          }
+        });
         galleryGrid.appendChild(img);
       });
       document.getElementById("gallery-section").hidden = false;
@@ -164,8 +241,8 @@
     errorMessage.hidden = true;
 
     try {
-      const data = await attemptUnlock(input.value);
-      renderContent(data);
+      const { data, key } = await attemptUnlock(input.value);
+      await renderContent(data, key);
     } catch (err) {
       // Wrong code or corrupted data both fail decryption the same way —
       // deliberately no distinction shown, so nothing is leaked either way.
