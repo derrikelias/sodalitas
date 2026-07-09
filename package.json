@@ -1,0 +1,16 @@
+{
+  "name": "sodalitas",
+  "version": "1.0.0",
+  "description": "Sodalitas digital archive — private companion to the NFC membership card.",
+  "scripts": {
+    "build": "eleventy",
+    "serve": "eleventy --serve",
+    "debug": "DEBUG=Eleventy* eleventy",
+    "encrypt": "node scripts/encrypt-members.js"
+  },
+  "devDependencies": {
+    "@11ty/eleventy": "^3.0.0",
+    "gray-matter": "^4.0.3",
+    "jimp": "^0.22.12"
+  }
+}

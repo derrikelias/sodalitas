@@ -1,0 +1,632 @@
+/* ==========================================================================
+   SODALITAS — Main Stylesheet
+   Tokens, base styles, and shared components. One file, imported once,
+   site-wide. See README for the reasoning behind this structure.
+   ========================================================================== */
+
+/* ---------------------------------------------------------------------
+   Self-hosted fonts — no external request, no dependency on a CDN
+   still existing years from now. Both are variable fonts: one file
+   per family per style covers the full weight range.
+   --------------------------------------------------------------------- */
+@font-face {
+  font-family: "Fraunces";
+  src: url("/assets/fonts/Fraunces-Variable.woff2") format("woff2");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Fraunces";
+  src: url("/assets/fonts/Fraunces-Italic-Variable.woff2") format("woff2");
+  font-weight: 100 900;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Work Sans";
+  src: url("/assets/fonts/WorkSans-Variable.woff2") format("woff2");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Work Sans";
+  src: url("/assets/fonts/WorkSans-Italic-Variable.woff2") format("woff2");
+  font-weight: 100 900;
+  font-style: italic;
+  font-display: swap;
+}
+
+/* Fraunces ships a "WONK" axis — intentionally irregular, quirky
+   letterforms as an alternate style. This file defaults it on, which
+   works against the quiet, restrained mood used everywhere else, so
+   it's turned off explicitly here rather than left to the font's own
+   default. SOFT stays at 0 for the same reason — the crisper, more
+   classical cut suits the "archive" tone better than the softer one. */
+h1, h2, h3, .mark, .message, .entry-title {
+  font-variation-settings: "SOFT" 0, "WONK" 0;
+}
+
+:root {
+  --colour-ink: #1a1815;
+  --colour-ink-soft: #4a453f;
+  --colour-paper: #f7f5f0;
+  --colour-paper-raised: #efece4;
+  --colour-line: #d8d3c8;
+  --colour-accent: #8a6d3b;
+  --colour-accent-soft: #8a6d3b1a;
+  --grain-opacity: 0.045;
+  --grain-blend-mode: multiply;
+
+  --font-heading: "Fraunces", Georgia, serif;
+  --font-body: "Work Sans", -apple-system, sans-serif;
+
+  --tracking-tight: -0.01em;
+  --tracking-normal: 0;
+  --tracking-wide: 0.04em;
+  --tracking-wider: 0.08em;
+
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: 1.333rem;
+  --text-xl: 1.777rem;
+  --text-2xl: 2.369rem;
+  --text-3xl: 3.157rem;
+  --text-4xl: 4.209rem;
+
+  --leading-tight: 1.2;
+  --leading-normal: 1.6;
+  --leading-relaxed: 1.85;
+
+  --space-1: 0.5rem;
+  --space-2: 1rem;
+  --space-3: 1.5rem;
+  --space-4: 2rem;
+  --space-5: 3rem;
+  --space-6: 4.5rem;
+  --space-7: 6.75rem;
+  --space-8: 10rem;
+
+  --content-width-narrow: 38rem;
+  --content-width: 44rem;
+  --content-width-wide: 80rem;
+
+  --duration-fast: 200ms;
+  --duration-normal: 500ms;
+  --duration-slow: 900ms;
+  --ease-quiet: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-gentle: cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+
+[data-theme="dark"] {
+  --colour-ink: #ece7dc;
+  --colour-ink-soft: #a8a196;
+  --colour-paper: #17150f;
+  --colour-paper-raised: #211e17;
+  --colour-line: #322e24;
+  --colour-accent: #c9a24a;
+  --colour-accent-soft: #c9a24a26;
+  --grain-opacity: 0.28;
+  --grain-blend-mode: overlay;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation-duration: 0ms !important; transition-duration: 0ms !important; }
+}
+
+* { box-sizing: border-box; }
+
+html { background: var(--colour-paper); }
+
+body {
+  margin: 0;
+  background: var(--colour-paper);
+  color: var(--colour-ink);
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  line-height: var(--leading-normal);
+  -webkit-font-smoothing: antialiased;
+  position: relative;
+  transition: background var(--duration-slow) var(--ease-quiet),
+              color var(--duration-slow) var(--ease-quiet);
+}
+
+/* Grain — fixed full-viewport SVG turbulence layer, blended at low
+   opacity. No image asset, no external request. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: var(--grain-opacity);
+  mix-blend-mode: var(--grain-blend-mode);
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.55' numOctaves='3' stitchTiles='stitch'/><feColorMatrix type='matrix' values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 2.2 -0.6'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+  background-size: 220px 220px;
+}
+
+header.site, .member-header, section, footer.site, main {
+  position: relative;
+  z-index: 1;
+}
+
+/* ---------------------------------------------------------------------
+   Header, brand lockup, nav, theme toggle
+   --------------------------------------------------------------------- */
+header.site {
+  display: flex;
+  flex-wrap: wrap;
+  row-gap: var(--space-2);
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-4) var(--space-4) var(--space-3);
+  border-bottom: 1px solid var(--colour-line);
+  max-width: 64rem;
+  margin: 0 auto;
+  gap: var(--space-4);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.brand svg {
+  width: 1.7rem;
+  height: 1.7rem;
+  display: block;
+  color: var(--colour-accent);
+}
+
+.brand .logo-mark {
+  width: auto;
+  height: 2.1rem;
+  aspect-ratio: 610 / 1259;
+}
+
+.mark {
+  font-family: var(--font-heading);
+  font-size: var(--text-lg);
+  letter-spacing: var(--tracking-wide);
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.site-minimal {
+  position: relative;
+  justify-content: center;
+}
+
+.brand-center {
+  margin: 0 auto;
+}
+
+.theme-toggle-standalone {
+  position: absolute;
+  right: var(--space-4);
+  top: 50%;
+  transform: translateY(-50%);
+  padding-left: 0;
+  margin-left: 0;
+  border-left: none;
+}
+
+nav.site a {
+  color: var(--colour-ink-soft);
+  text-decoration: none;
+  font-size: var(--text-xs);
+  letter-spacing: var(--tracking-wider);
+  text-transform: uppercase;
+  margin-left: var(--space-4);
+  transition: color var(--duration-normal) var(--ease-quiet);
+}
+
+nav.site a:first-child { margin-left: 0; }
+
+nav.site a:hover,
+nav.site a:focus-visible {
+  color: var(--colour-accent);
+}
+
+.theme-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  color: var(--colour-ink-soft);
+  cursor: pointer;
+  padding: 0.4rem 0 0.4rem var(--space-4);
+  margin-left: var(--space-2);
+  border-left: 1px solid var(--colour-line);
+  transition: color var(--duration-normal) var(--ease-quiet);
+}
+
+.theme-toggle svg {
+  width: 1.1rem;
+  height: 1.1rem;
+  display: block;
+}
+
+.theme-toggle:hover,
+.theme-toggle:focus-visible {
+  color: var(--colour-accent);
+}
+
+.theme-toggle .icon-moon { display: none; }
+[data-theme="dark"] .theme-toggle .icon-sun { display: none; }
+[data-theme="dark"] .theme-toggle .icon-moon { display: block; }
+
+/* ---------------------------------------------------------------------
+   Member identity block
+   --------------------------------------------------------------------- */
+.member-header {
+  max-width: var(--content-width);
+  margin: 0 auto;
+  padding: var(--space-7) var(--space-4) var(--space-5);
+  text-align: center;
+}
+
+.member-number {
+  display: inline-block;
+  font-size: var(--text-xs);
+  letter-spacing: var(--tracking-wider);
+  text-transform: uppercase;
+  color: var(--colour-accent);
+  border: 1px solid var(--colour-accent);
+  border-radius: 100px;
+  padding: 0.35em 0.9em;
+  margin-bottom: var(--space-3);
+}
+
+h1.member-name {
+  font-family: var(--font-heading);
+  font-weight: 500;
+  font-size: var(--text-3xl);
+  letter-spacing: -0.01em;
+  margin: 0 0 var(--space-2);
+}
+
+.member-meta {
+  font-size: var(--text-sm);
+  color: var(--colour-ink-soft);
+  letter-spacing: var(--tracking-wide);
+}
+
+.member-meta span + span::before {
+  content: "·";
+  margin: 0 var(--space-2);
+  color: var(--colour-line);
+}
+
+/* ---------------------------------------------------------------------
+   Section scaffolding
+   --------------------------------------------------------------------- */
+section {
+  max-width: var(--content-width);
+  margin: 0 auto;
+  padding: var(--space-6) var(--space-4);
+}
+
+section + section { border-top: 1px solid var(--colour-line); }
+
+.eyebrow {
+  font-size: var(--text-xs);
+  letter-spacing: var(--tracking-wider);
+  text-transform: uppercase;
+  color: var(--colour-accent);
+  margin: 0 0 var(--space-3);
+}
+
+h2.section-title {
+  font-family: var(--font-heading);
+  font-weight: 500;
+  font-size: var(--text-2xl);
+  margin: 0 0 var(--space-4);
+}
+
+/* ---------------------------------------------------------------------
+   Timeline
+   --------------------------------------------------------------------- */
+.timeline {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-left: 1px solid var(--colour-line);
+}
+
+.timeline li {
+  position: relative;
+  padding: 0 0 var(--space-5) var(--space-5);
+}
+
+.timeline li::before {
+  content: "";
+  position: absolute;
+  left: -5px;
+  top: 0.4em;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--colour-paper);
+  border: 1px solid var(--colour-accent);
+}
+
+.timeline .date {
+  display: block;
+  font-size: var(--text-xs);
+  letter-spacing: var(--tracking-wide);
+  color: var(--colour-ink-soft);
+  margin-bottom: var(--space-1);
+}
+
+.timeline .entry-title {
+  font-family: var(--font-heading);
+  font-size: var(--text-lg);
+  margin: 0 0 var(--space-1);
+}
+
+.timeline p {
+  margin: 0;
+  color: var(--colour-ink-soft);
+  line-height: var(--leading-relaxed);
+}
+
+/* ---------------------------------------------------------------------
+   Countries visited
+   --------------------------------------------------------------------- */
+.countries {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.countries li {
+  font-size: var(--text-sm);
+  padding: 0.4em 0.9em;
+  background: var(--colour-paper-raised);
+  border-radius: 2px;
+}
+
+/* ---------------------------------------------------------------------
+   Gallery
+   --------------------------------------------------------------------- */
+.gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-3);
+}
+
+.gallery-grid div,
+.gallery-grid img {
+  aspect-ratio: 4 / 5;
+  width: 100%;
+  object-fit: cover;
+  background: var(--colour-paper-raised);
+  border: 1px solid var(--colour-line);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--text-xs);
+  color: var(--colour-ink-soft);
+  letter-spacing: var(--tracking-wide);
+  transition: opacity var(--duration-slow) var(--ease-gentle);
+}
+
+.gallery-grid img {
+  cursor: pointer;
+}
+
+.gallery-grid div:hover,
+.gallery-grid img:hover { opacity: 0.75; }
+
+/* ---------------------------------------------------------------------
+   Lightbox — a quiet overlay, not a generic modal component. Same
+   overlay tone in both themes, since it's dimming the whole page
+   regardless of which theme sits beneath it.
+   --------------------------------------------------------------------- */
+.lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(10, 9, 7, 0.92);
+  padding: var(--space-5);
+}
+
+.lightbox img {
+  max-width: 90vw;
+  max-height: 82vh;
+  object-fit: contain;
+  border: 1px solid rgba(247, 245, 240, 0.15);
+}
+
+.lightbox-close {
+  position: absolute;
+  top: var(--space-4);
+  right: var(--space-4);
+  background: none;
+  border: none;
+  color: var(--colour-paper);
+  font-size: 2rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0.25rem 0.6rem;
+  opacity: 0.8;
+  transition: opacity var(--duration-fast) var(--ease-quiet);
+}
+
+.lightbox-close:hover,
+.lightbox-close:focus-visible {
+  opacity: 1;
+}
+
+.lightbox-download {
+  position: absolute;
+  bottom: var(--space-4);
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+  letter-spacing: var(--tracking-wider);
+  text-transform: uppercase;
+  color: var(--colour-paper);
+  text-decoration: none;
+  border: 1px solid rgba(247, 245, 240, 0.4);
+  border-radius: 2px;
+  padding: 0.6em 1.2em;
+  transition: border-color var(--duration-fast) var(--ease-quiet);
+}
+
+.lightbox-download:hover,
+.lightbox-download:focus-visible {
+  border-color: var(--colour-paper);
+}
+
+/* ---------------------------------------------------------------------
+   Personal message
+   --------------------------------------------------------------------- */
+.message {
+  font-family: var(--font-heading);
+  font-size: var(--text-xl);
+  font-weight: 400;
+  font-style: italic;
+  line-height: 1.5;
+  color: var(--colour-ink);
+  max-width: var(--content-width-narrow);
+  margin: 0 auto;
+  text-align: center;
+}
+
+.message-attribution {
+  display: block;
+  font-family: var(--font-body);
+  font-style: normal;
+  font-size: var(--text-xs);
+  letter-spacing: var(--tracking-wide);
+  color: var(--colour-ink-soft);
+  margin-top: var(--space-3);
+}
+
+/* ---------------------------------------------------------------------
+   Unlock prompt — shown until the correct key decrypts the page
+   --------------------------------------------------------------------- */
+.unlock {
+  max-width: var(--content-width-narrow);
+  margin: 0 auto;
+  padding: var(--space-6) var(--space-4);
+  text-align: center;
+}
+
+.unlock-copy {
+  color: var(--colour-ink-soft);
+  line-height: var(--leading-relaxed);
+  margin: 0 0 var(--space-4);
+}
+
+.unlock-form {
+  display: flex;
+  gap: var(--space-2);
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.unlock-form input {
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  letter-spacing: var(--tracking-wide);
+  padding: 0.7em 1em;
+  border: 1px solid var(--colour-line);
+  border-radius: 2px;
+  background: var(--colour-paper-raised);
+  color: var(--colour-ink);
+  min-width: 14rem;
+}
+
+.unlock-form input:focus-visible {
+  outline: none;
+  border-color: var(--colour-accent);
+}
+
+.unlock-form button {
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+  letter-spacing: var(--tracking-wider);
+  text-transform: uppercase;
+  padding: 0.7em 1.4em;
+  border: 1px solid var(--colour-accent);
+  border-radius: 2px;
+  background: none;
+  color: var(--colour-accent);
+  cursor: pointer;
+  transition: background var(--duration-normal) var(--ease-quiet),
+              color var(--duration-normal) var(--ease-quiet);
+}
+
+.unlock-form button:hover,
+.unlock-form button:focus-visible {
+  background: var(--colour-accent);
+  color: var(--colour-paper);
+}
+
+.unlock-error {
+  margin-top: var(--space-3);
+  font-size: var(--text-sm);
+  color: var(--colour-ink-soft);
+}
+
+/* ---------------------------------------------------------------------
+   Generic prose pages — Charter, About, Archive, Expeditions
+   --------------------------------------------------------------------- */
+.prose {
+  max-width: var(--content-width-narrow);
+  margin: 0 auto;
+  padding: var(--space-7) var(--space-4);
+  line-height: var(--leading-relaxed);
+}
+
+.prose h1 {
+  font-family: var(--font-heading);
+  font-weight: 500;
+  font-size: var(--text-3xl);
+  margin: 0 0 var(--space-4);
+}
+
+.prose p { color: var(--colour-ink-soft); margin: 0 0 var(--space-3); }
+
+/* ---------------------------------------------------------------------
+   Footer
+   --------------------------------------------------------------------- */
+footer.site {
+  text-align: center;
+  padding: var(--space-6) var(--space-4);
+  font-size: var(--text-xs);
+  letter-spacing: var(--tracking-wide);
+  color: var(--colour-ink-soft);
+}
+
+@media (max-width: 40rem) {
+  .gallery-grid { grid-template-columns: repeat(2, 1fr); }
+  h1.member-name { font-size: var(--text-2xl); }
+
+  header.site { padding: var(--space-3) var(--space-3) var(--space-2); gap: var(--space-2); }
+  .mark { font-size: var(--text-base); }
+  nav.site a { margin-left: var(--space-2); font-size: 0.65rem; }
+  .header-right { gap: var(--space-2); }
+  .theme-toggle { padding-left: var(--space-2); margin-left: 0; }
+}
