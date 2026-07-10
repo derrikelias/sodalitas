@@ -74,15 +74,29 @@
   // Built once, reused for every photo — a plain overlay with the
   // image shown larger, and a direct download link to the same
   // already-decrypted file, so no second fetch or re-decrypt is
-  // needed just to save it.
+  // needed just to save it. Built once, reused for every photo — and
+  // aware of the whole gallery, not just one image, so arrows can
+  // step forward and backward without closing and reopening.
   let lightboxParts;
+  let galleryPhotos = [];
+  let currentIndex = 0;
+
   function buildLightbox() {
     const lightbox = document.createElement("div");
     lightbox.className = "lightbox";
     lightbox.hidden = true;
 
+    const content = document.createElement("div");
+    content.className = "lightbox-content";
+    lightbox.appendChild(content);
+
     const img = document.createElement("img");
-    lightbox.appendChild(img);
+    content.appendChild(img);
+
+    const downloadLink = document.createElement("a");
+    downloadLink.className = "lightbox-download";
+    downloadLink.textContent = "Download";
+    content.appendChild(downloadLink);
 
     const closeBtn = document.createElement("button");
     closeBtn.className = "lightbox-close";
@@ -91,31 +105,58 @@
     closeBtn.textContent = "×";
     lightbox.appendChild(closeBtn);
 
-    const downloadLink = document.createElement("a");
-    downloadLink.className = "lightbox-download";
-    downloadLink.textContent = "Download";
-    lightbox.appendChild(downloadLink);
+    const prevBtn = document.createElement("button");
+    prevBtn.className = "lightbox-nav lightbox-prev";
+    prevBtn.type = "button";
+    prevBtn.setAttribute("aria-label", "Previous photo");
+    prevBtn.textContent = "‹";
+    lightbox.appendChild(prevBtn);
+
+    const nextBtn = document.createElement("button");
+    nextBtn.className = "lightbox-nav lightbox-next";
+    nextBtn.type = "button";
+    nextBtn.setAttribute("aria-label", "Next photo");
+    nextBtn.textContent = "›";
+    lightbox.appendChild(nextBtn);
 
     closeBtn.addEventListener("click", closeLightbox);
+    prevBtn.addEventListener("click", () => showPhoto(currentIndex - 1));
+    nextBtn.addEventListener("click", () => showPhoto(currentIndex + 1));
     lightbox.addEventListener("click", (e) => {
       if (e.target === lightbox) closeLightbox();
     });
     document.addEventListener("keydown", (e) => {
-      if (e.key === "Escape" && !lightbox.hidden) closeLightbox();
+      if (lightbox.hidden) return;
+      if (e.key === "Escape") closeLightbox();
+      if (e.key === "ArrowLeft") showPhoto(currentIndex - 1);
+      if (e.key === "ArrowRight") showPhoto(currentIndex + 1);
     });
 
     document.body.appendChild(lightbox);
-    return { lightbox, img, downloadLink };
+    return { lightbox, img, downloadLink, prevBtn, nextBtn };
   }
 
-  function openLightbox(objectUrl, alt, index) {
+  // Wraps around at either end — cyclical, so the arrows always do
+  // something rather than dead-ending on the first or last photo.
+  function showPhoto(index) {
+    const total = galleryPhotos.length;
+    currentIndex = (index + total) % total;
+    const { img, downloadLink, prevBtn, nextBtn } = lightboxParts;
+    const photo = galleryPhotos[currentIndex];
+    img.src = photo.url;
+    img.alt = photo.alt || "";
+    downloadLink.href = photo.url;
+    downloadLink.download = `sodalitas-photo-${String(currentIndex + 1).padStart(2, "0")}.jpg`;
+    const multiple = total > 1;
+    prevBtn.hidden = !multiple;
+    nextBtn.hidden = !multiple;
+  }
+
+  function openLightbox(photos, startIndex) {
     if (!lightboxParts) lightboxParts = buildLightbox();
-    const { lightbox, img, downloadLink } = lightboxParts;
-    img.src = objectUrl;
-    img.alt = alt || "";
-    downloadLink.href = objectUrl;
-    downloadLink.download = `sodalitas-photo-${String(index + 1).padStart(2, "0")}.jpg`;
-    lightbox.hidden = false;
+    galleryPhotos = photos;
+    showPhoto(startIndex);
+    lightboxParts.lightbox.hidden = false;
   }
 
   function closeLightbox() {
@@ -201,18 +242,19 @@
       const photoUrls = await Promise.all(
         data.gallery.map((entry) => fetchAndDecryptPhoto(entry, key))
       );
-      photoUrls.forEach((objectUrl, i) => {
+      const photos = photoUrls.map((url, i) => ({ url, alt: data.gallery[i].alt || "" }));
+      photos.forEach((photo, i) => {
         const img = document.createElement("img");
-        img.src = objectUrl;
-        img.alt = data.gallery[i].alt || "";
+        img.src = photo.url;
+        img.alt = photo.alt;
         img.loading = "lazy";
         img.tabIndex = 0;
         img.setAttribute("role", "button");
-        img.addEventListener("click", () => openLightbox(objectUrl, img.alt, i));
+        img.addEventListener("click", () => openLightbox(photos, i));
         img.addEventListener("keydown", (e) => {
           if (e.key === "Enter" || e.key === " ") {
             e.preventDefault();
-            openLightbox(objectUrl, img.alt, i);
+            openLightbox(photos, i);
           }
         });
         galleryGrid.appendChild(img);
