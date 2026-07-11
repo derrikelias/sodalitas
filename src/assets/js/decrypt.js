@@ -123,7 +123,9 @@
     prevBtn.addEventListener("click", () => showPhoto(currentIndex - 1));
     nextBtn.addEventListener("click", () => showPhoto(currentIndex + 1));
     lightbox.addEventListener("click", (e) => {
-      if (e.target === lightbox) closeLightbox();
+      if (!content.contains(e.target) && e.target !== closeBtn && e.target !== prevBtn && e.target !== nextBtn) {
+        closeLightbox();
+      }
     });
     document.addEventListener("keydown", (e) => {
       if (lightbox.hidden) return;

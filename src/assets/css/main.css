@@ -449,6 +449,10 @@ h2.section-title {
   padding: var(--space-5);
 }
 
+.lightbox[hidden] {
+  display: none;
+}
+
 .lightbox-content {
   display: flex;
   flex-direction: column;
@@ -471,29 +475,31 @@ h2.section-title {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(23, 21, 15, 0.85);
+  background: #f7f5f0;
   border: none;
   border-radius: 50%;
-  color: #f7f5f0;
+  color: #17150f;
   cursor: pointer;
-  transition: background var(--duration-fast) var(--ease-quiet);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  transition: background var(--duration-fast) var(--ease-quiet),
+              transform var(--duration-fast) var(--ease-quiet);
 }
 
 .lightbox-close {
   top: var(--space-4);
   right: var(--space-4);
-  width: 2.6rem;
-  height: 2.6rem;
-  font-size: 1.5rem;
+  width: 3rem;
+  height: 3rem;
+  font-size: 1.7rem;
   line-height: 1;
 }
 
 .lightbox-nav {
   top: 50%;
   transform: translateY(-50%);
-  width: 3rem;
-  height: 3rem;
-  font-size: 1.6rem;
+  width: 3.4rem;
+  height: 3.4rem;
+  font-size: 1.8rem;
 }
 
 .lightbox-prev { left: var(--space-4); }
@@ -503,7 +509,13 @@ h2.section-title {
 .lightbox-close:focus-visible,
 .lightbox-nav:hover,
 .lightbox-nav:focus-visible {
-  background: rgba(23, 21, 15, 1);
+  background: #c9a24a;
+  transform: scale(1.08);
+}
+
+.lightbox-nav:hover,
+.lightbox-nav:focus-visible {
+  transform: translateY(-50%) scale(1.08);
 }
 
 .lightbox-download {
