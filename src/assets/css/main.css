@@ -526,15 +526,16 @@ h2.section-title {
   text-transform: uppercase;
   color: #17150f;
   text-decoration: none;
-  background: #c9a24a;
+  background: #f7f5f0;
   border-radius: 2px;
   padding: 0.65em 1.5em;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
   transition: background var(--duration-fast) var(--ease-quiet);
 }
 
 .lightbox-download:hover,
 .lightbox-download:focus-visible {
-  background: #dab35c;
+  background: #c9a24a;
 }
 
 /* ---------------------------------------------------------------------
