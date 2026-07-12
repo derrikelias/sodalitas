@@ -229,13 +229,116 @@
     }
 
     if (data.countries && data.countries.length) {
-      document.getElementById("countries-count").textContent = `${data.countries.length}, so far`;
+      const totalCities = data.countries.reduce(
+        (sum, c) => sum + (c.visits ? c.visits.length : 0),
+        0
+      );
+      document.getElementById("countries-count").textContent =
+        totalCities > 0
+          ? `${totalCities} ${totalCities === 1 ? "city" : "cities"} across ${data.countries.length}, so far`
+          : `${data.countries.length}, so far`;
+
       const countriesList = document.getElementById("countries-list");
+      const itinerary = document.getElementById("travel-itinerary");
+      const mapContainer = document.getElementById("travel-map");
+      let selectedCode = null;
+
+      function renderItinerary(country) {
+        if (!country) {
+          itinerary.innerHTML = '<p class="travel-itinerary-empty">Select a country to see where, and when.</p>';
+          return;
+        }
+        itinerary.innerHTML = "";
+
+        const heading = document.createElement("h3");
+        heading.className = "travel-itinerary-country";
+        heading.textContent = country.name;
+        itinerary.appendChild(heading);
+
+        const visits = country.visits || [];
+        if (visits.length) {
+          const stat = document.createElement("p");
+          stat.className = "travel-itinerary-stat";
+          stat.textContent = `${visits.length} ${visits.length === 1 ? "place" : "places"} visited together`;
+          itinerary.appendChild(stat);
+
+          const list = document.createElement("ul");
+          list.className = "travel-visit-list";
+          visits.forEach((visit) => {
+            const li = document.createElement("li");
+            const place = document.createElement("span");
+            place.className = "travel-visit-place";
+            place.textContent = visit.place || "";
+            const date = document.createElement("span");
+            date.className = "travel-visit-date";
+            date.textContent = visit.date || "";
+            li.append(place, date);
+            list.appendChild(li);
+          });
+          itinerary.appendChild(list);
+        }
+      }
+
+      // Some countries (island nations, or mainlands with outlying
+      // territories like Portugal's Azores) are grouped under a <g>
+      // with the country code, containing several <path> fragments,
+      // rather than the code sitting on one single <path>. This finds
+      // every fragment either way, so the whole country highlights
+      // together rather than just whichever piece happened to carry
+      // the id directly.
+      function getCountryPaths(code) {
+        const directPath = mapContainer.querySelector(`path[id="${code}"]`);
+        if (directPath) return [directPath];
+        const group = mapContainer.querySelector(`g[id="${code}"]`);
+        return group ? Array.from(group.querySelectorAll("path")) : [];
+      }
+
+      function selectCountry(code) {
+        selectedCode = selectedCode === code ? null : code;
+
+        document.querySelectorAll(".countries button").forEach((btn) => {
+          btn.setAttribute("aria-pressed", String(btn.dataset.code === selectedCode));
+        });
+        mapContainer.querySelectorAll("path.selected").forEach((p) => p.classList.remove("selected"));
+        if (selectedCode) {
+          getCountryPaths(selectedCode).forEach((p) => p.classList.add("selected"));
+        }
+
+        const country = data.countries.find((c) => c.code === selectedCode);
+        renderItinerary(country);
+      }
+
       data.countries.forEach((country) => {
         const li = document.createElement("li");
-        li.textContent = country;
+        const button = document.createElement("button");
+        button.type = "button";
+        button.textContent = country.name;
+        button.dataset.code = country.code || "";
+        button.setAttribute("aria-pressed", "false");
+        button.addEventListener("click", () => selectCountry(country.code));
+        li.appendChild(button);
         countriesList.appendChild(li);
       });
+
+      // The map itself carries no personal information — just country
+      // borders — but it's still only fetched once a member is actually
+      // unlocked, in keeping with not loading anything until it's needed.
+      try {
+        const mapResponse = await fetch(unlock.dataset.mapUrl);
+        const mapSvgText = await mapResponse.text();
+        mapContainer.innerHTML = mapSvgText;
+
+        data.countries.forEach((country) => {
+          if (!country.code) return;
+          getCountryPaths(country.code).forEach((path) => {
+            path.classList.add("visited");
+            path.addEventListener("click", () => selectCountry(country.code));
+          });
+        });
+      } catch (err) {
+        mapContainer.hidden = true;
+      }
+
       document.getElementById("countries-section").hidden = false;
     }
 

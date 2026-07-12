@@ -383,7 +383,7 @@ h2.section-title {
 }
 
 /* ---------------------------------------------------------------------
-   Countries visited
+   Countries visited — clickable pills, a map, and an itinerary panel
    --------------------------------------------------------------------- */
 .countries {
   display: flex;
@@ -391,14 +391,125 @@ h2.section-title {
   gap: var(--space-2);
   list-style: none;
   padding: 0;
-  margin: 0;
+  margin: 0 0 var(--space-4);
 }
 
-.countries li {
+.countries button {
+  font-family: var(--font-body);
   font-size: var(--text-sm);
   padding: 0.4em 0.9em;
   background: var(--colour-paper-raised);
+  border: 1px solid transparent;
   border-radius: 2px;
+  color: var(--colour-ink);
+  cursor: pointer;
+  transition: background var(--duration-fast) var(--ease-quiet),
+              border-color var(--duration-fast) var(--ease-quiet);
+}
+
+.countries button:hover,
+.countries button:focus-visible {
+  border-color: var(--colour-accent);
+}
+
+.countries button[aria-pressed="true"] {
+  background: var(--colour-accent);
+  color: var(--colour-paper);
+}
+
+.travel-map-wrap {
+  display: flex;
+  gap: var(--space-5);
+  align-items: flex-start;
+}
+
+.travel-map {
+  flex: 1 1 60%;
+  min-width: 0;
+}
+
+.travel-map svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.travel-map path {
+  fill: var(--colour-paper-raised);
+  stroke: var(--colour-line);
+  stroke-width: 0.5;
+  transition: fill var(--duration-normal) var(--ease-quiet);
+}
+
+.travel-map path.visited {
+  fill: var(--colour-accent-soft);
+  cursor: pointer;
+}
+
+.travel-map path.visited:hover {
+  fill: var(--colour-accent);
+}
+
+.travel-map path.selected {
+  fill: var(--colour-accent);
+}
+
+.travel-itinerary {
+  flex: 1 1 40%;
+  min-width: 0;
+  padding-top: var(--space-2);
+}
+
+.travel-itinerary-empty {
+  color: var(--colour-ink-soft);
+  font-size: var(--text-sm);
+  font-style: italic;
+}
+
+.travel-itinerary-country {
+  font-family: var(--font-heading);
+  font-size: var(--text-lg);
+  margin: 0 0 var(--space-3);
+}
+
+.travel-itinerary-stat {
+  font-size: var(--text-xs);
+  letter-spacing: var(--tracking-wide);
+  color: var(--colour-ink-soft);
+  margin: 0 0 var(--space-3);
+}
+
+.travel-visit-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.travel-visit-list li {
+  padding: var(--space-2) 0;
+  border-top: 1px solid var(--colour-line);
+}
+
+.travel-visit-list li:first-child {
+  border-top: none;
+}
+
+.travel-visit-place {
+  font-family: var(--font-heading);
+  font-size: var(--text-base);
+  display: block;
+}
+
+.travel-visit-date {
+  font-size: var(--text-xs);
+  letter-spacing: var(--tracking-wide);
+  color: var(--colour-ink-soft);
+}
+
+@media (max-width: 40rem) {
+  .travel-map-wrap {
+    flex-direction: column;
+  }
 }
 
 /* ---------------------------------------------------------------------

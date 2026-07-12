@@ -15,6 +15,7 @@ minimalHeader: true
   class="unlock"
   id="unlock"
   data-gallery-base="{{ ('/assets/gallery-encrypted/' + number + '/') | url }}"
+  data-map-url="{{ '/assets/maps/world-map.svg' | url }}"
   data-salt="{{ salt }}"
   data-iv="{{ iv }}"
   data-ciphertext="{{ ciphertext }}"
@@ -53,6 +54,12 @@ minimalHeader: true
     <p class="eyebrow">Countries Visited Together</p>
     <h2 class="section-title" id="countries-count"></h2>
     <ul class="countries" id="countries-list"></ul>
+    <div class="travel-map-wrap">
+      <div class="travel-map" id="travel-map" aria-hidden="true"></div>
+      <div class="travel-itinerary" id="travel-itinerary">
+        <p class="travel-itinerary-empty">Select a country to see where, and when.</p>
+      </div>
+    </div>
   </section>
 
   <section id="gallery-section" hidden>
